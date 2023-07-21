@@ -1,0 +1,99 @@
+%Patrick Pinello / Final Project 
+%Predicting population booms in Lynx using
+%ode45 and Eulers and diff
+      
+    %%%%% ODE45 %%%%%
+    k = 37000; %mid point of population data
+    a = .42; % This value determines the amount of peaks in a given time period
+    b = 0; %b is stated to be zero in the paper
+    tspan = [1823 1886]; %Time range (years)
+    y0 = [872 1000]; %Initial conditions N2  
+     
+    A = [0 1; -a -b]; %A matrix. In first row N2 is present, 2nd row represents the coef after solving for N''     
+    b = [0; a*k]; %column of constants
+    N2 = @(t,x) A*x + 1/5*b; %anonymous function finding the vector of x derivatives
+    [t,y] = ode45(N2, tspan, y0); %using ode45 to solve 
+    
+    %%% Eulers %%%
+    tm = tspan(2)-tspan(1); %complete time
+    h = tm/10000; %step size (using 10000 (anything smaller failed)
+    nSteps = tm/h; %finding number of steps to use
+    [xE,yE] = odeEuler(N2,tspan(1),h,nSteps,y0); %solving using odeEuler
+    
+    %%% ORIGINAL DATA %%%
+    %Lynx Population data
+    lynx = [4059 2385 2208 1563 872 1510 1572 4417 10271 14135 6676 3341 2436 2420 3034 7141 14168 24788 23572 11670 3033 1867 2226 3874 7063 9082 10610 14408 3823 1007 649 658 852 3210 8668 9334 17144 7718 4372 1846 992 827 1385 3377 9743 21096 23588 15363 4780 2252 701 712 1834 3578 7235 14523 12126 6429 7072 3153 1318 1560 3587 10331];
+    %%% Plotting original data %%%
+    plot(tspan(1)-2:tspan(2)-2,lynx); hold on;
+    
+    %%% Plotting ode45 MODEL %%%
+    plot(t,y); hold on
+    % Deleting unnecessary line
+    children = get(gca, 'children');
+    delete(children(1));
+    
+    %%% Plotting Eulers MODEL %%%
+    plot(xE,yE(:,1))
+    
+    % ALL PLOT LABELS %
+    title('Population boom cycles in Lynx')
+    xlabel('Years')
+    ylabel('Number of Lynx')
+    legend({'Real Data','Model (ode45)','Model (Eulers)'},'Location','northwest')
+    
+    figure()
+    
+    %%% Post-Processing (Derivative) %%%
+    dt = diff(t); %diff of t
+    dy = diff(y); %Diff of x
+    dy_dt = dy./dt; %Derivative with element by elemnt
+    plot(t(1:end-1),dy_dt);
+    %Deleting unnecessary line
+    children = get(gca, 'children');
+    delete(children(1));  
+    
+    %Acceleration
+    title('Acceleration of Population of Lynx')
+    xlabel('Years')
+    ylabel('Population of Lynx / Time')
+    
+    %Directly comparing Euler's and ode45
+    figure()
+    plot(t,y,'r'); hold on
+    % Deleting unnecessary line
+    children = get(gca, 'children');
+    delete(children(1));
+    
+    %%% Plotting Eulers MODEL %%%
+    plot(xE,yE(:,1),'b')
+    
+    % ALL PLOT LABELS %
+    title('Population boom cycles in Lynx (ode45 vs Eulers)')
+    xlabel('Years')
+    ylabel('Number of Lynx')
+    legend({'Model (ode45)','Model (Eulers)'},'Location','northwest')
+    
+%%% odeEuler Function %%%
+function [x,y] = odeEuler(f,x0,h,nSteps,y0)
+% Eulers Method Initialize the output solution arrays.
+
+x(1) = x0; %First row of x is x0
+y(:,1) = y0; %first col of y is y0
+
+% Compute x an y using Euler's method.
+x = x0:h:(x0+nSteps*h); % x is the range from x0 to x0 plus the number
+                        % of steps times the step count and the step
+                        % interval
+
+for i = 1:length(x)-1 %eulers in for loop % 1 to the length of x minus 1
+   s = f(x(i),y(:,i)); %the function at a specific point in loop
+   y(:,i+1)=y(:,i)+s*h; %function for eulers
+end
+
+y = y'; % output xm as a series of column vectors.
+
+end
+ 
+
+
+
